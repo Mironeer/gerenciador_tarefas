@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciador de Tarefas</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+    <header>
+        <h1>Gerenciador de Tarefas</h1>
+        <p>Organize suas atividades acadêmicas</p>
+    </header>
+
+    <main>
+        <% if (!mostrarTodas) { %>
+            <section class="formulario">
+                <h2>Cadastrar nova tarefa</h2>
+
+                <form action="/cadastrar" method="POST">
+                    <label for="titulo">Título</label>
+                    <input
+                        type="text"
+                        id="titulo"
+                        name="titulo"
+                        minlength="3"
+                        maxlength="100"
+                        required
+                        placeholder="Nome da tarefa"
+                    >
+
+                    <label for="descricao">Descrição</label>
+                    <textarea
+                        id="descricao"
+                        name="descricao"
+                        maxlength="500"
+                        placeholder="Descreva a tarefa (opcional)"
+                    ></textarea>
+
+                    <label for="disciplina">Disciplina</label>
+                    <input
+                        type="text"
+                        id="disciplina"
+                        name="disciplina"
+                        minlength="2"
+                        maxlength="80"
+                        required
+                        placeholder="Nome da disciplina"
+                    >
+
+                    <label for="dataEntrega">Data de entrega</label>
+                    <input
+                        type="date"
+                        id="dataEntrega"
+                        name="dataEntrega"
+                        min="<%= dataMinima %>"
+                        required
+                    >
+
+                    <button type="submit">Cadastrar tarefa</button>
+                </form>
+            </section>
+        <% } %>
+
+        <section class="lista">
+            <h2>
+                <%= mostrarTodas ? 'Todas as tarefas' : 'Minhas tarefas recentes' %>
+            </h2>
+
+            <% if (mostrarTodas) { %>
+                <nav class="filtros">
+                    <a
+                        href="/todas"
+                        class="<%= filtro === 'todas' ? 'ativo' : '' %>"
+                    >
+                        Todas
+                    </a>
+
+                    <a
+                        href="/todas?status=pendente"
+                        class="<%= filtro === 'pendente' ? 'ativo' : '' %>"
+                    >
+                        Pendentes
+                    </a>
+
+                    <a
+                        href="/todas?status=concluida"
+                        class="<%= filtro === 'concluida' ? 'ativo' : '' %>"
+                    >
+                        Concluídas
+                    </a>
+                </nav>
+            <% } %>
+
+            <% if (tarefas.length === 0) { %>
+                <p class="vazio">Nenhuma tarefa encontrada.</p>
+            <% } %>
+
+            <% tarefas.forEach(tarefa => { %>
+                <article class="tarefa">
+
+                    <div class="informacoes">
+                        <h3><%= tarefa.titulo %></h3>
+
+                        <p>
+                            Disciplina: <%= tarefa.disciplina %>
+                        </p>
+
+                        <% if (tarefa.descricao) { %>
+                            <p>
+                                Descrição: <%= tarefa.descricao %>
+                            </p>
+                        <% } %>
+
+                        <% if (tarefa.dataEntrega) { %>
+                            <p>
+                                Entrega:
+                                <%= tarefa.dataEntrega.split('-')[2] %>/<%= tarefa.dataEntrega.split('-')[1] %>/<%= tarefa.dataEntrega.split('-')[0] %>
+                            </p>
+                        <% } else { %>
+                            <p>Entrega: Não informada</p>
+                        <% } %>
+
+                        <span class="status <%= tarefa.status %>">
+                            <%= tarefa.status === 'pendente' ? 'Pendente' : 'Concluída' %>
+                        </span>
+
+                        <% if (tarefa.status === 'pendente' && tarefa.diasRestantes !== null) { %>
+
+                            <% if (tarefa.diasRestantes > 1) { %>
+                                <p class="aviso-prazo">
+                                    Faltam <%= tarefa.diasRestantes %> dias para a entrega.
+                                </p>
+
+                            <% } else if (tarefa.diasRestantes === 1) { %>
+                                <p class="aviso-prazo">
+                                    Falta 1 dia para a entrega.
+                                </p>
+
+                            <% } else if (tarefa.diasRestantes === 0) { %>
+                                <p class="aviso-prazo vence-hoje">
+                                    Atenção: vence hoje!
+                                </p>
+
+                            <% } else { %>
+                                <p class="aviso-prazo atrasada">
+                                    Atenção: atrasada há <%= Math.abs(tarefa.diasRestantes) %> dias.
+                                </p>
+                            <% } %>
+
+                        <% } %>
+                    </div>
+
+                    <div class="acoes">
+
+                        <a
+                            href="/detalhes/<%= tarefa.id %>"
+                            class="botao detalhes"
+                        >
+                            Editar
+                        </a>
+
+                        <% if (tarefa.status === 'pendente') { %>
+                            <form
+                                action="/concluir/<%= tarefa.id %>"
+                                method="POST"
+                            >
+                                <button type="submit" class="concluir">
+                                    Concluir
+                                </button>
+                            </form>
+                        <% } %>
+
+                        <form
+                            action="/excluir/<%= tarefa.id %>"
+                            method="POST"
+                            class="form-excluir"
+                        >
+                            <button type="button" class="excluir">
+                                Excluir
+                            </button>
+                        </form>
+
+                    </div>
+
+                </article>
+            <% }); %>
+
+            <% if (mostrarTodas) { %>
+                <a href="/" class="botao voltar">
+                    Voltar para o início
+                </a>
+            <% } else { %>
+                <a href="/todas" class="botao ver-todas">
+                    Ver todas as tarefas
+                </a>
+            <% } %>
+
+        </section>
+    </main>
+
+    <div id="modal-confirmacao" class="modal">
+        <div class="modal-conteudo">
+
+            <h2>Excluir tarefa?</h2>
+
+            <p>
+                Tem certeza de que deseja excluir a atividade:
+                <strong id="nome-atividade"></strong>?
+                Essa ação não poderá ser desfeita.
+            </p>
+
+            <div class="modal-acoes">
+
+                <button
+                    type="button"
+                    id="cancelar-exclusao"
+                >
+                    Cancelar
+                </button>
+
+                <form id="confirmar-exclusao" method="POST">
+                    <button type="submit" class="excluir">
+                        Sim, excluir
+                    </button>
+                </form>
+
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>Gerenciador de Tarefas Acadêmicas<br>Eduardo Guimarães Canziani</p>
+    </footer>
+
+    <script>
+        const modal = document.getElementById('modal-confirmacao');
+
+        const formularioConfirmacao = document.getElementById(
+            'confirmar-exclusao'
+        );
+
+        const botaoCancelar = document.getElementById(
+            'cancelar-exclusao'
+        );
+
+        const botoesExcluir = document.querySelectorAll(
+            '.form-excluir button'
+        );
+
+        botoesExcluir.forEach(botao => {
+            botao.addEventListener('click', () => {
+                const formulario = botao.closest('.form-excluir');
+
+                formularioConfirmacao.action = formulario.action;
+
+                const nomeAtividade = botao
+                    .closest('.tarefa')
+                    .querySelector('h3').textContent;
+
+                document.getElementById('nome-atividade').textContent =
+                    nomeAtividade;
+
+                modal.classList.add('ativo');
+            });
+        });
+
+        botaoCancelar.addEventListener('click', () => {
+            modal.classList.remove('ativo');
+        });
+
+        modal.addEventListener('click', evento => {
+            if (evento.target === modal) {
+                modal.classList.remove('ativo');
+            }
+        });
+    </script>
+
+</body>
+</html>

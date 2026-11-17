@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Tarefa</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+    <header>
+        <h1>Editar Tarefa</h1>
+        <p>Consulte e atualize sua atividade acadêmica</p>
+    </header>
+
+    <main>
+
+        <section class="formulario">
+
+            <h2>Informações da tarefa</h2>
+
+            <div class="informacoes-tarefa">
+
+                <div class="informacoes-esquerda">
+
+                    <p>
+                        <strong>ID:</strong>
+                        <%= tarefa.id %>
+                    </p>
+
+                    <p>
+                        <strong>Status:</strong>
+                        <%= tarefa.status === 'pendente' ? 'Pendente' : 'Concluída' %>
+                    </p>
+
+                    <p>
+                        <strong>Entrega:</strong>
+                        <% if (tarefa.dataEntrega) { %>
+                            <%= tarefa.dataEntrega.split('-')[2] %>/<%= tarefa.dataEntrega.split('-')[1] %>/<%= tarefa.dataEntrega.split('-')[0] %>
+                        <% } else { %>
+                            Não informada
+                        <% } %>
+                    </p>
+
+                </div>
+
+                <div class="informacoes-direita">
+
+                    <% if (tarefa.status === 'pendente' && tarefa.diasRestantes !== null) { %>
+
+                        <% if (tarefa.diasRestantes > 1) { %>
+                            <p class="aviso-prazo">
+                                Faltam <%= tarefa.diasRestantes %> dias
+                            </p>
+                        <% } else if (tarefa.diasRestantes === 1) { %>
+                            <p class="aviso-prazo">
+                                Falta 1 dia
+                            </p>
+                        <% } else if (tarefa.diasRestantes === 0) { %>
+                            <p class="aviso-prazo vence-hoje">
+                                Vence hoje!
+                            </p>
+                        <% } else { %>
+                            <p class="aviso-prazo atrasada">
+                                Atrasada há <%= Math.abs(tarefa.diasRestantes) %> dias
+                            </p>
+                        <% } %>
+
+                    <% } %>
+
+                </div>
+
+            </div>
+
+            <h2>Editar tarefa</h2>
+
+            <form action="/editar/<%= tarefa.id %>" method="POST">
+
+                <label for="titulo">Título</label>
+                <input
+                    type="text"
+                    id="titulo"
+                    name="titulo"
+                    value="<%= tarefa.titulo %>"
+                    minlength="3"
+                    maxlength="100"
+                    required
+                >
+
+                <label for="descricao">Descrição</label>
+                <textarea
+                    id="descricao"
+                    name="descricao"
+                    maxlength="500"
+                ><%= tarefa.descricao %></textarea>
+
+                <label for="disciplina">Disciplina</label>
+                <input
+                    type="text"
+                    id="disciplina"
+                    name="disciplina"
+                    value="<%= tarefa.disciplina %>"
+                    minlength="2"
+                    maxlength="80"
+                    required
+                >
+
+                <label for="dataEntrega">Data de entrega</label>
+                <input
+                    type="date"
+                    id="dataEntrega"
+                    name="dataEntrega"
+                    value="<%= tarefa.dataEntrega %>"
+                    min="<%= dataMinima %>"
+                    required
+                >
+
+                <button type="submit">Salvar alterações</button>
+
+            </form>
+
+            <a href="/" class="botao voltar">
+                Voltar para tarefas
+            </a>
+
+        </section>
+
+    </main>
+
+    <footer>
+        <p>Gerenciador de Tarefas Acadêmicas</p>
+    </footer>
+
+</body>
+</html>
